@@ -200,7 +200,9 @@ paths:
         200:
           description: OK
           
-  '/users':
+  '/clusters/{clusterId}/users':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
     get:
       summary: List all users
       tags:
@@ -208,8 +210,9 @@ paths:
       responses:
         200:
           description: OK
-  '/users/{userEmail}':
+  '/clusters/{clusterId}/users/{userEmail}':
     parameters:
+      - $ref: '#/components/parameters/clusterId'
       - $ref: '#/components/parameters/userEmail'
     get:
       summary: Get the specific user information
@@ -241,7 +244,9 @@ paths:
         204:
           description: No Content
           
-  '/templates':
+  '/clusters/{clusterId}/templates':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
     get:
       summary: List all templates
       tags:
@@ -249,8 +254,9 @@ paths:
       responses:
         200:
           description: OK
-  '/templates/{templateName}':
+  '/clusters/{clusterId}/templates/{templateName}':
     parameters:
+      - $ref: '#/components/parameters/clusterId'
       - $ref: '#/components/parameters/templateName'
     put:
       summary: Create / update a template
