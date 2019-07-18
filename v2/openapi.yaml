@@ -17,11 +17,11 @@ components:
       type: apiKey
       name: token
       in: query
-    masterKey:
+    masterToken:
       type: apiKey
       description: |
-        `md5("$email:$masterKey")`
-      name: key
+        `md5("$email:$masterToken")`
+      name: token
       in: query
   parameters:
     teamId:
@@ -54,6 +54,12 @@ components:
       schema:
         type: string
       required: true
+  schemas:
+    JobModel:
+      type: object
+      properties:
+        jobName:
+          type: string
 
 security:
   - openIdConnect:
@@ -63,9 +69,8 @@ security:
   - masterKey: []
   
 tags:
+  - name: Teams & Clusters
   - name: Jobs
-  - name: Teams
-  - name: Clusters
   - name: Users
   - name: Templates
 
@@ -74,7 +79,7 @@ paths:
     get:
       summary: List all teams of the user
       tags:
-        - Teams
+        - Teams & Clusters
       responses:
         200:
           description: OK
@@ -82,46 +87,94 @@ paths:
             application/json:
               example:
                 - name: platform
+                  clusters:
+                    - name: Azure-EastUS-P40-Pilot
+                      admin: true
+                    - name: Azure-EastUS-P40-Platform
+                      admin: true
                 - name: relevance
-  '/teams/{teamId}':
+                  clusters:
+                    - name: Azure-EastUS-P40
+                      admin: false
+                    - name: Azure-WestEurope-V100
+                      admin: false
+  '/teams/{teamId}/clusters/{clusterId}':
     parameters:
       - $ref: '#/components/parameters/teamId'
+      - $ref: '#/components/parameters/clusterId'
     get:
-      summary: Get information of the team
+      summary: List all clusters of the team
       tags:
-        - Teams
+        - Teams & Clusters
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              example:
+                activeJobs: 15
+                avaliableGpus:
+                  P40: 12
+                unschedulableGpus:
+                  P40: 0
+                usedGpus:
+                  P40: 31
+                perNodeGpus:
+                  P40: 4
+
   '/teams/{teamId}/jobs':
     parameters:
       - $ref: '#/components/parameters/teamId'
     get:
       summary: List all jobs of the team
+      description: |
+        If pass `user=all` in query, there will be only jobs of clusters which user has **admin** permission respond.
       tags:
         - Jobs
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+            enum:
+              - me
+              - all
+            default: me
+        - name: offset
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: number
+            maximum: 100
+            minimum: 10
+            default: 10
       responses:
         200:
           description: OK
-    
-  '/clusters':
-    get:
-      summary: List all clusters
-      tags:
-        - Clusters
-      responses:
-        200:
-          description: OK
-  '/clusters/{clusterId}':
-    parameters:
-      - $ref: '#/components/parameters/clusterId'
-    get:
-      summary: Get the information of the cluster
-      tags:
-        - Clusters
-      responses:
-        200:
-          description: OK
+          content:
+            application/json:
+              example:
+                - id: '486ea3c1-ca88-413a-865f-cd1849778c53'
+                  cluster: 'Azure-EastUS-P40-Pilot'
+                  name: 'caffe training example - resnet18'
+                  status: 'failed'
+                  gpu: 1
+                  user: 'qixcheng@microsoft.com'
+                  submitted: '2019-07-11T07:37:59.000Z'
+                  finished: '2019-07-11T07:38:26.000Z'
+                - id: '7d20f28b-bec9-4878-85d6-789560004688'
+                  cluster: 'Azure-EastUS-P40-Platform'
+                  name: 'Data+Job+@+2019-07-03T13:51:13.531Z'
+                  status: 'failed'
+                  gpu: 0
+                  user: 'qixcheng@microsoft.com'
+                  submitted: '2019-07-04T11:52:17.000Z'
+                  finished: '2019-07-04T11:52:38.000Z'
 
   '/clusters/{clusterId}/jobs':
     parameters:
@@ -130,9 +183,23 @@ paths:
       summary: Submit a new job to the cluster
       tags:
         - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobModel'
       responses:
-        200:
-          description: OK
+        201:
+          description: Created
+          headers:
+            Location:
+              description: The retrieve URI of the submitted job.
+              schema:
+                type: string
+          content:
+            application/json:
+              example:
+                jobId: '486ea3c1-ca88-413a-865f-cd1849778c53'
 
   '/clusters/{clusterId}/jobs/{jobId}':
     parameters:
@@ -149,20 +216,33 @@ paths:
     parameters:
       - $ref: '#/components/parameters/clusterId'
       - $ref: '#/components/parameters/jobId'
-    get:
-      summary: Get the status of the job
-      tags:
-        - Jobs
-      responses:
-        200:
-          description: OK
     put:
       summary: Approve / kill a job
       tags:
         - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - approved
+                    - killing
+            examples:
+              approve:
+                summary: Approve a job
+                value:
+                  status: approved
+              kill:
+                summary: Kill a job
+                value:
+                  status: killing
       responses:
-        200:
-          description: OK
+        204:
+          description: No Content
   '/clusters/{clusterId}/jobs/{jobId}/commands':
     parameters:
       - $ref: '#/components/parameters/clusterId'
@@ -192,10 +272,31 @@ paths:
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              example:
+                - name: ssh
+                  domain: dltsprod-worker-cnrqrv.eastus.cloudapp.azure.com
+                  port: 31301
+                  podPort: 22
+                  status: running
     post:
       summary: Add an endpoint to the job
       tags:
         - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 16
+                podPort:
+                  type: number
+                  minimum: 40000
+                  maximum: 49999
       responses:
         200:
           description: OK
@@ -210,12 +311,21 @@ paths:
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              example:
+                - email: anbhu@microsoft.com
+                  admin: true
+                - email: qixcheng@microsoft.com
+                  admin: false
   '/clusters/{clusterId}/users/{userEmail}':
     parameters:
       - $ref: '#/components/parameters/clusterId'
       - $ref: '#/components/parameters/userEmail'
     get:
       summary: Get the specific user information
+      description: |
+        Non-admin coule only get information of itself.
       tags:
         - Users
       responses:
@@ -227,7 +337,7 @@ paths:
                 admin: false
                 accessToken: '123ABC'
     put:
-      summary: Create a user / Modify the admin permission of a user
+      summary: Create a user / modify the user
       tags:
         - Users
       requestBody:
@@ -238,8 +348,15 @@ paths:
               properties:
                 admin:
                   type: boolean
-            example:
-              admin: false
+            examples:
+              enable:
+                summary: Make user an admin
+                value:
+                  admin: true
+              disable:
+                summary: Remove user the admin
+                value:
+                  admin: false
       responses:
         204:
           description: No Content
@@ -248,7 +365,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/clusterId'
     get:
-      summary: List all templates
+      summary: List all templates, including shared templates and personal templates.
       tags:
         - Templates
       responses:
@@ -258,10 +375,23 @@ paths:
     parameters:
       - $ref: '#/components/parameters/clusterId'
       - $ref: '#/components/parameters/templateName'
+      - name: database
+        in: query
+        schema:
+          type: string
+          enum:
+            - master
+            - personal
+          default: personal
     put:
       summary: Create / update a template
       tags:
         - Templates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobModel'
       responses:
         200:
           description: OK
