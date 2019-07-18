@@ -1,0 +1,268 @@
+openapi: 3.0.0
+
+info:
+  title: DLTS Web Portal API
+  version: 2.0.0
+  
+servers:
+  - url: http://dltshub.redmond.corp.microsoft.com/api/v2
+    description: DLTS Hub
+
+components:
+  securitySchemes:
+    activeDirectory:
+      type: openIdConnect
+      openIdConnectUrl: 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration'
+    accessToken:
+      type: apiKey
+      name: token
+      in: query
+    masterKey:
+      type: apiKey
+      description: |
+        `md5("$email:$masterKey")`
+      name: key
+      in: query
+  parameters:
+    teamId:
+      name: teamId
+      in: path
+      schema:
+        type: string
+      required: true
+    clusterId:
+      name: clusterId
+      in: path
+      schema:
+        type: string
+      required: true
+    jobId:
+      name: jobId
+      in: path
+      schema:
+        type: string
+      required: true
+    userEmail:
+      name: userEmail
+      in: path
+      schema:
+        type: string
+      required: true
+    templateName:
+      name: templateName
+      in: path
+      schema:
+        type: string
+      required: true
+
+security:
+  - openIdConnect:
+    - openid
+    - email
+  - accessToken: []
+  - masterKey: []
+  
+tags:
+  - name: Jobs
+  - name: Teams
+  - name: Clusters
+  - name: Users
+  - name: Templates
+
+paths:
+  '/teams':
+    get:
+      summary: List all teams of the user
+      tags:
+        - Teams
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              example:
+                - name: platform
+                - name: relevance
+  '/teams/{teamId}':
+    parameters:
+      - $ref: '#/components/parameters/teamId'
+    get:
+      summary: Get information of the team
+      tags:
+        - Teams
+      responses:
+        200:
+          description: OK
+  '/teams/{teamId}/jobs':
+    parameters:
+      - $ref: '#/components/parameters/teamId'
+    get:
+      summary: List all jobs of the team
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: OK
+    
+  '/clusters':
+    get:
+      summary: List all clusters
+      tags:
+        - Clusters
+      responses:
+        200:
+          description: OK
+  '/clusters/{clusterId}':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
+    get:
+      summary: Get the information of the cluster
+      tags:
+        - Clusters
+      responses:
+        200:
+          description: OK
+
+  '/clusters/{clusterId}/jobs':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
+    post:
+      summary: Submit a new job to the cluster
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: OK
+
+  '/clusters/{clusterId}/jobs/{jobId}':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
+      - $ref: '#/components/parameters/jobId'
+    get:
+      summary: Get the information of the job
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: OK
+  '/clusters/{clusterId}/jobs/{jobId}/status':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
+      - $ref: '#/components/parameters/jobId'
+    get:
+      summary: Get the status of the job
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: OK
+    put:
+      summary: Approve / kill a job
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: OK
+  '/clusters/{clusterId}/jobs/{jobId}/commands':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
+      - $ref: '#/components/parameters/jobId'
+    get:
+      summary: Get all run commands of the job
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: OK
+    post:
+      summary: Run a command in the job
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: OK
+  '/clusters/{clusterId}/jobs/{jobId}/endpoints':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
+      - $ref: '#/components/parameters/jobId'
+    get:
+      summary: List all endpoints of the job
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: OK
+    post:
+      summary: Add an endpoint to the job
+      tags:
+        - Jobs
+      responses:
+        200:
+          description: OK
+          
+  '/users':
+    get:
+      summary: List all users
+      tags:
+        - Users
+      responses:
+        200:
+          description: OK
+  '/users/{userEmail}':
+    parameters:
+      - $ref: '#/components/parameters/userEmail'
+    get:
+      summary: Get the specific user information
+      tags:
+        - Users
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              example:
+                admin: false
+                accessToken: '123ABC'
+    put:
+      summary: Create a user / Modify the admin permission of a user
+      tags:
+        - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                admin:
+                  type: boolean
+            example:
+              admin: false
+      responses:
+        204:
+          description: No Content
+          
+  '/templates':
+    get:
+      summary: List all templates
+      tags:
+        - Templates
+      responses:
+        200:
+          description: OK
+  '/templates/{templateName}':
+    parameters:
+      - $ref: '#/components/parameters/templateName'
+    put:
+      summary: Create / update a template
+      tags:
+        - Templates
+      responses:
+        200:
+          description: OK
+    delete:
+      summary: Delete a template
+      tags:
+        - Templates
+      responses:
+        200:
+          description: OK
