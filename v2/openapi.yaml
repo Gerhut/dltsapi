@@ -71,6 +71,8 @@ security:
 tags:
   - name: Teams & Clusters
   - name: Jobs
+  - name: Job Commands
+  - name: Job Endpoints
   - name: Users
   - name: Templates
 
@@ -86,18 +88,34 @@ paths:
           content:
             application/json:
               example:
-                - name: platform
-                  clusters:
-                    - name: Azure-EastUS-P40-Pilot
-                      admin: true
-                    - name: Azure-EastUS-P40-Platform
-                      admin: true
-                - name: relevance
-                  clusters:
-                    - name: Azure-EastUS-P40
-                      admin: false
-                    - name: Azure-WestEurope-V100
-                      admin: false
+                [
+                  {
+                    "name": "platform",
+                    "clusters": [
+                      {
+                        "name": "Azure-EastUS-P40-Pilot",
+                        "admin": true
+                      },
+                      {
+                        "name": "Azure-EastUS-P40-Platform",
+                        "admin": true
+                      }
+                    ]
+                  },
+                  {
+                    "name": "relevance",
+                    "clusters": [
+                      {
+                        "name": "Azure-EastUS-P40",
+                        "admin": false
+                      },
+                      {
+                        "name": "Azure-WestEurope-V100",
+                        "admin": false
+                      }
+                    ]
+                  }
+                ]
   '/teams/{teamId}/clusters/{clusterId}':
     parameters:
       - $ref: '#/components/parameters/teamId'
@@ -112,15 +130,21 @@ paths:
           content:
             application/json:
               example:
-                activeJobs: 15
-                avaliableGpus:
-                  P40: 12
-                unschedulableGpus:
-                  P40: 0
-                usedGpus:
-                  P40: 31
-                perNodeGpus:
-                  P40: 4
+                {
+                  "activeJobs": 15,
+                  "avaliableGpus": {
+                    "P40": 12
+                  },
+                  "unschedulableGpus": {
+                    "P40": 0
+                  },
+                  "usedGpus": {
+                    "P40": 31
+                  },
+                  "perNodeGpus": {
+                    "P40": 4
+                  }
+                }
 
   '/teams/{teamId}/jobs':
     parameters:
@@ -159,22 +183,30 @@ paths:
           content:
             application/json:
               example:
-                - id: '486ea3c1-ca88-413a-865f-cd1849778c53'
-                  cluster: 'Azure-EastUS-P40-Pilot'
-                  name: 'caffe training example - resnet18'
-                  status: 'failed'
-                  gpu: 1
-                  user: 'qixcheng@microsoft.com'
-                  submitted: '2019-07-11T07:37:59.000Z'
-                  finished: '2019-07-11T07:38:26.000Z'
-                - id: '7d20f28b-bec9-4878-85d6-789560004688'
-                  cluster: 'Azure-EastUS-P40-Platform'
-                  name: 'Data+Job+@+2019-07-03T13:51:13.531Z'
-                  status: 'failed'
-                  gpu: 0
-                  user: 'qixcheng@microsoft.com'
-                  submitted: '2019-07-04T11:52:17.000Z'
-                  finished: '2019-07-04T11:52:38.000Z'
+                [
+                  {
+                    "id": "486ea3c1-ca88-413a-865f-cd1849778c53",
+                    "cluster": "Azure-EastUS-P40-Pilot",
+                    "name": "caffe training example - resnet18",
+                    "status": "failed",
+                    "gpu": 1,
+                    "user": "qixcheng@microsoft.com",
+                    "team": "platform",
+                    "submitted": "2019-07-11T07:37:59.000Z",
+                    "finished": "2019-07-11T07:38:26.000Z"
+                  },
+                  {
+                    "id": "7d20f28b-bec9-4878-85d6-789560004688",
+                    "cluster": "Azure-EastUS-P40-Platform",
+                    "name": "Data+Job+@+2019-07-03T13:51:13.531Z",
+                    "status": "failed",
+                    "gpu": 0,
+                    "user": "qixcheng@microsoft.com",
+                    "team": "platform",
+                    "submitted": "2019-07-04T11:52:17.000Z",
+                    "finished": "2019-07-04T11:52:38.000Z"
+                  }
+                ]
 
   '/clusters/{clusterId}/jobs':
     parameters:
@@ -199,7 +231,9 @@ paths:
           content:
             application/json:
               example:
-                jobId: '486ea3c1-ca88-413a-865f-cd1849778c53'
+                {
+                  "jobId": "486ea3c1-ca88-413a-865f-cd1849778c53"
+                }
 
   '/clusters/{clusterId}/jobs/{jobId}':
     parameters:
@@ -212,6 +246,22 @@ paths:
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              example:
+                {
+                  "id": "486ea3c1-ca88-413a-865f-cd1849778c53",
+                  "cluster": "Azure-EastUS-P40-Pilot",
+                  "name": "caffe training example - resnet18",
+                  "status": "failed",
+                  "gpu": 1,
+                  "user": "qixcheng@microsoft.com",
+                  "team": "platform",
+                  "submitted": "2019-07-11T07:37:59.000Z",
+                  "finished": "2019-07-11T07:38:26.000Z",
+                  "log": "",
+                  "config": {}
+                }
   '/clusters/{clusterId}/jobs/{jobId}/status':
     parameters:
       - $ref: '#/components/parameters/clusterId'
@@ -231,15 +281,21 @@ paths:
                   enum:
                     - approved
                     - killing
+              required:
+                - status
             examples:
               approve:
                 summary: Approve a job
                 value:
-                  status: approved
+                  {
+                    "status": "approved"
+                  }
               kill:
                 summary: Kill a job
                 value:
-                  status: killing
+                  {
+                    "status": "killing"
+                  }
       responses:
         204:
           description: No Content
@@ -250,17 +306,44 @@ paths:
     get:
       summary: Get all run commands of the job
       tags:
-        - Jobs
+        - Job Commands
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              example:
+                {
+                  "commands": [
+                    {
+                      "command": "ls",
+                      "output": null,
+                      "status": "run",
+                      "submitted": "2019-07-11T07:37:59.000Z"
+                    }
+                  ]
+                }
     post:
       summary: Run a command in the job
       tags:
-        - Jobs
+        - Job Commands
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+              required:
+                - command
+            example:
+              {
+                "command": "bash --version"
+              }
       responses:
-        200:
-          description: OK
+        204:
+          description: No Content
   '/clusters/{clusterId}/jobs/{jobId}/endpoints':
     parameters:
       - $ref: '#/components/parameters/clusterId'
@@ -268,38 +351,70 @@ paths:
     get:
       summary: List all endpoints of the job
       tags:
-        - Jobs
+        - Job Endpoints
       responses:
         200:
           description: OK
           content:
             application/json:
               example:
-                - name: ssh
-                  domain: dltsprod-worker-cnrqrv.eastus.cloudapp.azure.com
-                  port: 31301
-                  podPort: 22
-                  status: running
+                {
+                  "endpoints": [
+                    {
+                      "name": "ssh",
+                      "domain": "dltsprod-worker-cnrqrv.eastus.cloudapp.azure.com",
+                      "port": 31301,
+                      "podPort": 22,
+                      "status": "running"
+                    }
+                  ]
+                }
     post:
       summary: Add an endpoint to the job
       tags:
-        - Jobs
+        - Job Endpoints
       requestBody:
         content:
           application/json:
             schema:
               type: object
               properties:
-                name:
-                  type: string
-                  maxLength: 16
-                podPort:
-                  type: number
-                  minimum: 40000
-                  maximum: 49999
+                endpoints:
+                  type: array
+                  items:
+                    oneOf:
+                      - enum:
+                        - ssh
+                        - ipython
+                        - tensorboard
+                      - type: object
+                        properties:
+                          name:
+                            type: string
+                            maxLength: 16
+                          podPort:
+                            type: number
+                            minimum: 40000
+                            maximum: 49999
+                        required:
+                          - name
+                          - podPort
+                  required:
+                    - endpoints
+            example:
+              {
+                "endpoints":
+                [
+                  "ssh",
+                  {
+                    "name": "port-40000",
+                    "podPort": 40000
+                  }
+                ]
+              }
       responses:
-        200:
-          description: OK
+        204:
+          description: No Content
           
   '/clusters/{clusterId}/users':
     parameters:
@@ -348,6 +463,8 @@ paths:
               properties:
                 admin:
                   type: boolean
+              required:
+                - admin
             examples:
               enable:
                 summary: Make user an admin
@@ -371,6 +488,14 @@ paths:
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              example:
+                {
+                  "templates": [
+                    
+                  ]
+                }
   '/clusters/{clusterId}/templates/{templateName}':
     parameters:
       - $ref: '#/components/parameters/clusterId'
@@ -393,12 +518,12 @@ paths:
             schema:
               $ref: '#/components/schemas/JobModel'
       responses:
-        200:
-          description: OK
+        204:
+          description: No Content
     delete:
       summary: Delete a template
       tags:
         - Templates
       responses:
-        200:
-          description: OK
+        204:
+          description: No Content
