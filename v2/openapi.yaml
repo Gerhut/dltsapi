@@ -58,8 +58,111 @@ components:
     JobModel:
       type: object
       properties:
+        gpuType:
+          type: string
+        jobtrainingtype:
+          enum:
+          - RegularJob
+          - PSDistJob
         jobName:
           type: string
+        resourcegpu:
+          type: number
+        numps:
+          type: number
+        numpsworker:
+          type: number
+        image:
+          type: string
+        cmd:
+          type: string
+        interactivePorts:
+          type: array
+          items:
+            type: number
+        ssh:
+          type: boolean
+        ipython:
+          type: boolean
+        tensorboard:
+          type: boolean
+  
+        workPath:
+          type: string
+        enableworkpath:
+          type: boolean
+        dataPath:
+          type: string
+        enabledatapath:
+          type: boolean
+        jobPath:
+          type: string
+        enablejobpath:
+          type: boolean
+        mountpoints:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              enabled:
+                type: boolean
+              containerPath:
+                type: string
+              hostPath:
+                type: string
+            required:
+              - name
+              - enabled
+              - containerPath
+              - hostPath
+  
+        env:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                type: string
+            required:
+              - name
+              - value
+              
+        hostNetwork:
+          type: boolean
+  
+        useGPUTopology:
+          type: boolean
+  
+        isPrivileged:
+          type: boolean
+        hostIPC:
+          type: boolean
+        dnsPolicy:
+          enum:
+          - Default
+          - ClusterFirstWithHostNet
+          - ClusterFirst
+        cpurequest:
+          type: string
+        memoryrequest:
+          type: string
+  
+        preemptionAllowed:
+          enum:
+          - 'True'
+          - 'False'
+  
+        do_log:
+          type: boolean
+        is_interactive:
+          type: boolean
+        runningasroot:
+          type: boolean
+        
 
 security:
   - openIdConnect:
@@ -90,27 +193,27 @@ paths:
               example:
                 [
                   {
-                    "name": "platform",
+                    "id": "platform",
                     "clusters": [
                       {
-                        "name": "Azure-EastUS-P40-Pilot",
+                        "id": "Azure-EastUS-P40-Pilot",
                         "admin": true
                       },
                       {
-                        "name": "Azure-EastUS-P40-Platform",
+                        "id": "Azure-EastUS-P40-Platform",
                         "admin": true
                       }
                     ]
                   },
                   {
-                    "name": "relevance",
+                    "id": "relevance",
                     "clusters": [
                       {
-                        "name": "Azure-EastUS-P40",
+                        "id": "Azure-EastUS-P40",
                         "admin": false
                       },
                       {
-                        "name": "Azure-WestEurope-V100",
+                        "id": "Azure-WestEurope-V100",
                         "admin": false
                       }
                     ]
@@ -207,7 +310,6 @@ paths:
                     "finished": "2019-07-04T11:52:38.000Z"
                   }
                 ]
-
   '/clusters/{clusterId}/jobs':
     parameters:
       - $ref: '#/components/parameters/clusterId'
@@ -234,7 +336,6 @@ paths:
                 {
                   "jobId": "486ea3c1-ca88-413a-865f-cd1849778c53"
                 }
-
   '/clusters/{clusterId}/jobs/{jobId}':
     parameters:
       - $ref: '#/components/parameters/clusterId'
@@ -299,6 +400,7 @@ paths:
       responses:
         204:
           description: No Content
+
   '/clusters/{clusterId}/jobs/{jobId}/commands':
     parameters:
       - $ref: '#/components/parameters/clusterId'
@@ -344,6 +446,7 @@ paths:
       responses:
         204:
           description: No Content
+
   '/clusters/{clusterId}/jobs/{jobId}/endpoints':
     parameters:
       - $ref: '#/components/parameters/clusterId'
@@ -478,9 +581,7 @@ paths:
         204:
           description: No Content
           
-  '/clusters/{clusterId}/templates':
-    parameters:
-      - $ref: '#/components/parameters/clusterId'
+  '/templates':
     get:
       summary: List all templates, including shared templates and personal templates.
       tags:
@@ -496,9 +597,8 @@ paths:
                     
                   ]
                 }
-  '/clusters/{clusterId}/templates/{templateName}':
+  '/templates/{templateName}':
     parameters:
-      - $ref: '#/components/parameters/clusterId'
       - $ref: '#/components/parameters/templateName'
       - name: database
         in: query
