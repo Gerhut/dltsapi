@@ -162,7 +162,6 @@ components:
           type: boolean
         runningasroot:
           type: boolean
-        
 
 security:
   - openIdConnect:
@@ -247,6 +246,25 @@ paths:
                   "perNodeGpus": {
                     "P40": 4
                   }
+                }
+  '/clusters/{clusterId}':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
+    get:
+      summary: Get the configuration of the cluster
+      tags:
+        - Teams & Clusters
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              example:
+                {
+                  "restfulapi": "http://example.com:5000",
+                  "grafana": "http://example.com:3000",
+                  "workStorage": "file://example.com",
+                  "dataStorage": "file://example.com/data"
                 }
 
   '/teams/{teamId}/jobs':
