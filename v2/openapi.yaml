@@ -536,7 +536,21 @@ paths:
       responses:
         204:
           description: No Content
-          
+    
+  '/user':
+    get:
+      summary: Get current user information
+      tags:
+        - Users
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              example:
+                {
+                  "token": "0123456789abcdef0123456789abcdef"
+                }
   '/clusters/{clusterId}/users':
     parameters:
       - $ref: '#/components/parameters/clusterId'
@@ -558,20 +572,6 @@ paths:
     parameters:
       - $ref: '#/components/parameters/clusterId'
       - $ref: '#/components/parameters/userEmail'
-    get:
-      summary: Get the specific user information
-      description: |
-        Non-admin coule only get information of itself.
-      tags:
-        - Users
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              example:
-                admin: false
-                accessToken: '123ABC'
     put:
       summary: Create a user / modify the user
       tags:
