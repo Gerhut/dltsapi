@@ -623,9 +623,9 @@ paths:
         schema:
           type: string
           enum:
-            - master
-            - personal
-          default: personal
+            - user
+            - team
+          default: user
     put:
       summary: Create / update a template
       tags:
