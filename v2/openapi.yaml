@@ -13,14 +13,15 @@ components:
     activeDirectory:
       type: openIdConnect
       openIdConnectUrl: 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration'
-    accessToken:
+    cookie:
       type: apiKey
+      description: JSON Web Token
       name: token
-      in: query
-    masterToken:
+      in: cookie
+    token:
       type: apiKey
-      description: |
-        `md5("$email:$masterToken")`
+      description: \
+        `email=$email&token=md5("$email:$masterToken")`
       name: token
       in: query
   parameters:
@@ -167,8 +168,8 @@ security:
   - openIdConnect:
     - openid
     - email
-  - accessToken: []
-  - masterKey: []
+  - cookie: []
+  - token: []
   
 tags:
   - name: Teams & Clusters
