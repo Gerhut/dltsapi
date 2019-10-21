@@ -387,7 +387,7 @@ paths:
       - $ref: '#/components/parameters/clusterId'
       - $ref: '#/components/parameters/jobId'
     put:
-      summary: Approve / kill a job
+      summary: Approve / kill / pause / resume a job
       tags:
         - Jobs
       requestBody:
@@ -401,6 +401,8 @@ paths:
                   enum:
                     - approved
                     - killing
+                    - pausing
+                    - queued
               required:
                 - status
             examples:
@@ -416,6 +418,21 @@ paths:
                   {
                     "status": "killing"
                   }
+              pause:
+                summary: Pause a job
+                value:
+                  {
+                    "status": "pausing"
+                  }
+              resume:
+                summary: Resume a job
+                value:
+                  {
+                    "status": "queued"
+                  }
+      responses:
+        204:
+          description: No Content
       responses:
         204:
           description: No Content
