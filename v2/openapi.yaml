@@ -433,6 +433,28 @@ paths:
       responses:
         204:
           description: No Content
+  '/clusters/{clusterId}/jobs/{jobId}/priority':
+    parameters:
+      - $ref: '#/components/parameters/clusterId'
+      - $ref: '#/components/parameters/jobId'
+    put:
+      summary: Adjust priority of a job
+      tags:
+        - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                priority:
+                  type: number
+              required:
+                - priority
+            example:
+              {
+                "priority": 1024
+              }
       responses:
         204:
           description: No Content
